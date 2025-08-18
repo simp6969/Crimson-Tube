@@ -9,12 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.12",
+    "daisyui": "^5.0.50",
+    "motion": "^12.23.12",
+    "next": "15.4.6",
+    "npm": "^11.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.4.6"
+    "uninstall": "^0.0.0",
+    "vercel": "^46.0.2",
+    "ytdl-core": "npm:@distube/ytdl-core@^4.16.12"
+  },
+  "browser": {
+    "fs": false,
+    "os": false,
+    "path": false
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4"
+    "@tailwindcss/postcss": "^4.1.12",
+    "tailwindcss": "^4.1.12"
   }
 }
