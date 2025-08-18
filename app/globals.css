@@ -12,7 +12,7 @@ body {
   background-color: var(--primary-color);
   font-family: var(--font-poppins);
   color: var(--primary-font-color);
-  user-select: none;
+  /* user-select: none; */
 }
 
 h1 {

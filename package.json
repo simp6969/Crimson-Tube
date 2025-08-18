@@ -16,14 +16,8 @@
     "npm": "^11.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "uninstall": "^0.0.0",
-    "vercel": "^46.0.2",
+    "vercel": "^32.0.1",
     "ytdl-core": "npm:@distube/ytdl-core@^4.16.12"
-  },
-  "browser": {
-    "fs": false,
-    "os": false,
-    "path": false
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.12",
