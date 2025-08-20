@@ -71,7 +71,7 @@ export default function LandingPage() {
     <div className="flex justify-center items-center h-[100dvh] w-[100dvw] flex-col gap-4 ">
       <h1>Crimson Tube</h1>
       <div className="flex flex-wrap gap-[10px] justify-center items-center">
-        <div className="w-[410px] h-[50px] flex flex-row bg-[var(--color-base-200)] gap-[5px] rounded-[5px]">
+        <div className="w-[360px] h-[50px] flex flex-row bg-[var(--color-base-200)] gap-[5px] rounded-[5px]">
           <input
             autoComplete="off"
             spellCheck="false"
@@ -84,7 +84,7 @@ export default function LandingPage() {
             }
             type="text"
             placeholder="Enter YouTube video URL"
-            className="w-[350px] h-[50px] p-[25px] bg-[var(--color-base-200)] rounded-[5px]"
+            className="w-[300px] h-[50px] p-[25px] bg-[var(--color-base-200)] rounded-[5px]"
             name="url fetching input"
           />
           <button
