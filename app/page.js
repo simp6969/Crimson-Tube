@@ -19,12 +19,14 @@ export default function LandingPage() {
     // Set loading state and clear previous errors
     setPageState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    const downloadUrl = `/api/download?url=${encodeURIComponent(
-      pageState.videoUrl
-    )}&format=${pageState.fileFormat.toLowerCase()}`;
-
     try {
-      const response = await fetch(downloadUrl);
+      const response = await fetch("/api/download", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: pageState.videoUrl }),
+      });
 
       // If the server responds with an error (like 400 or 500)
       if (!response.ok) {
@@ -36,7 +38,7 @@ export default function LandingPage() {
 
       // Get filename from the 'Content-Disposition' header
       const disposition = response.headers.get("Content-Disposition");
-      let filename = "download";
+      let filename = "download.mp4";
       if (disposition && disposition.includes("attachment")) {
         const filenameMatch = /filename="([^"]+)"/.exec(disposition);
         if (filenameMatch && filenameMatch[1]) {
@@ -71,7 +73,7 @@ export default function LandingPage() {
     <div className="flex justify-center items-center h-[100dvh] w-[100dvw] flex-col gap-4 ">
       <h1>Crimson Tube</h1>
       <div className="flex flex-wrap gap-[10px] justify-center items-center">
-        <div className="w-[360px] h-[50px] flex flex-row bg-[var(--color-base-200)] gap-[5px] rounded-[5px]">
+        <div className="w-[410px] h-[50px] flex flex-row bg-[var(--color-base-200)] gap-[5px] rounded-[5px]">
           <input
             autoComplete="off"
             spellCheck="false"
@@ -84,7 +86,7 @@ export default function LandingPage() {
             }
             type="text"
             placeholder="Enter YouTube video URL"
-            className="w-[300px] h-[50px] p-[25px] bg-[var(--color-base-200)] rounded-[5px]"
+            className="w-[350px] h-[50px] p-[25px] bg-[var(--color-base-200)] rounded-[5px]"
             name="url fetching input"
           />
           <button
