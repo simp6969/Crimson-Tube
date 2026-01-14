@@ -11,49 +11,42 @@ export default function LandingPage() {
   });
 
   async function handleDownload() {
-    if (!pageState.videoUrl.trim()) {
-      alert("Please enter a YouTube video URL.");
-      return;
-    }
-
-    // Set loading state and clear previous errors
     setPageState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const response = await fetch("/api/download", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: pageState.videoUrl }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: pageState.videoUrl,
+          format: pageState.fileFormat,
+        }),
       });
 
-      // If the server responds with an error (like 400 or 500)
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.details || errorData.error || "An unknown error occurred"
-        );
-      }
+      if (!response.ok) throw new Error("Download failed");
 
-      // Get filename from the 'Content-Disposition' header
+      // 1. Extract the filename from the header
       const disposition = response.headers.get("Content-Disposition");
-      let filename = "download.mp4";
-      if (disposition && disposition.includes("attachment")) {
-        const filenameMatch = /filename="([^"]+)"/.exec(disposition);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1];
+      let filename = "video.mp4"; // Fallback
+
+      if (disposition && disposition.includes("filename=")) {
+        // This regex grabs the string between the quotes in filename="example.mp4"
+        const match = disposition.match(/filename="(.+)"/);
+        if (match && match[1]) {
+          filename = decodeURIComponent(match[1]);
         }
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
+
+      // 2. Trigger the download with the REAL name
       const a = document.createElement("a");
-      a.style.display = "none";
       a.href = url;
-      a.download = filename;
+      a.download = filename; // This uses the YouTube title!
       document.body.appendChild(a);
       a.click();
+
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
@@ -62,7 +55,6 @@ export default function LandingPage() {
       setPageState((prev) => ({ ...prev, isLoading: false }));
     }
   }
-
   function handleFileFormatChange(format) {
     setPageState((prev) => ({ ...prev, fileFormat: format }));
     if (document.activeElement instanceof HTMLElement) {

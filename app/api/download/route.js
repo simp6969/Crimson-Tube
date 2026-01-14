@@ -1,58 +1,73 @@
-import youtubedl from 'youtube-dl-exec';
-import path from 'path';
-import fs from 'fs';
-import { NextResponse } from 'next/server';
+import youtubedl from "youtube-dl-exec";
+import path from "path";
+import fs from "fs";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { url } = body;
-
-    if (!url) {
-      return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+    const { url, format } = await req.json();
+    const isVideo = format === "MP4";
+    const binaryPath = path.join(
+      process.cwd(),
+      "node_modules",
+      "youtube-dl-exec",
+      "bin",
+      "yt-dlp"
+    );
+    const cookiesPath = path.join(process.cwd(), "cookies.txt");
+    const cookiesExist = fs.existsSync(cookiesPath);
+    if (!cookiesExist) {
+      console.warn("Cookies file not found at:", cookiesPath);
     }
-
-    // Vercel only allows writing to /tmp
-    const outputFilename = `video-${Date.now()}.mp4`;
-    const outputPath = path.join('/tmp', outputFilename);
-
-    // Explicitly point to the binary
-    const binaryPath = path.join(process.cwd(), 'node_modules', 'youtube-dl-exec', 'bin', 'yt-dlp');
     const yt = youtubedl.create(binaryPath);
 
-    // This executes yt-dlp
-    await yt(url, {
-      output: outputPath,
-      format: 'best',
+    // 1. Get Video Metadata (Title and Filename)
+    // We use dumpSingleJson because it's fast and gives us the "clean" title
+    const info = await yt(url, {
+      dumpSingleJson: true,
       noCheckCertificates: true,
-      noWarnings: true,
       preferFreeFormats: true,
-      addHeader: ['referer:youtube.com', 'user-agent:googlebot']
+      cookies: cookiesExist ? cookiesPath : "",
+      format: isVideo ? "bestvideo+bestaudio/best" : "bestaudio/best",
     });
 
-    // Check if file exists
+    const cleanTitle = info.title.replace(/[^\w\s]/gi, ""); // Remove illegal filename chars
+    const extension = isVideo ? "mp4" : "mp3";
+    const outputFilename = `${cleanTitle}.${extension}`;
+    const outputPath = path.join("/tmp", `dl-${Date.now()}.${extension}`);
+
+    // 2. Perform the actual download
+    await yt(url, {
+      output: outputPath,
+      format: isVideo ? "bestvideo+bestaudio/best" : "bestaudio/best",
+      mergeOutputFormat: isVideo ? "mp4" : null,
+      audioFormat: isVideo ? null : "mp3",
+      noCheckCertificates: true,
+      cookies: cookiesExist ? cookiesPath : "",
+    });
+
     if (fs.existsSync(outputPath)) {
       const fileBuffer = fs.readFileSync(outputPath);
-      
-      // Cleanup: Delete file from /tmp after reading it into memory
-      fs.unlinkSync(outputPath);
+      const stats = fs.statSync(outputPath);
+      fs.unlinkSync(outputPath); // Cleanup /tmp
 
-      // Return the file as a response
       return new NextResponse(fileBuffer, {
         status: 200,
         headers: {
-          'Content-Type': 'video/mp4',
-          'Content-Disposition': `attachment; filename=${outputFilename}`,
+          "Content-Type": isVideo ? "video/mp4" : "audio/mpeg",
+          "Content-Length": stats.size.toString(),
+          // This is what makes the "Save As" name match the YouTube title
+          "Content-Disposition": `attachment; filename="${encodeURIComponent(
+            outputFilename
+          )}"`,
+          "Access-Control-Expose-Headers": "Content-Disposition",
         },
       });
     } else {
-      throw new Error('File was not created');
+      throw new Error("File was not created");
     }
   } catch (error) {
-    console.error('yt-dlp Error:', error);
-    return NextResponse.json(
-      { error: 'Download failed', details: error.message },
-      { status: 500 }
-    );
+    console.error("Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
