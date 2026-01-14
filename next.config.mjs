@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    // This tells Next.js to include these files in the serverless bundle
+    // This ensures the yt-dlp binary is bundled with your API routes
     outputFileTracingIncludes: {
       "/api/**/*": ["./node_modules/youtube-dl-exec/bin/**/*"],
     },
